@@ -1,0 +1,49 @@
+:root {
+  color-scheme: dark;
+
+  /* Surfaces: warm smoke, not blue-black. A dim backroom. */
+  --bg: #0f0c0d;
+  --bg-top: #171213;
+  --bg-bottom: #0b0809;
+  --panel: #181415;
+  --panel-2: #1e181a;
+  --elev: #241d1f;
+  --line: #2b2325;
+  --line-soft: #221c1e;
+
+  /* Text: warm greys, off-white */
+  --text: #ece7e3;
+  --dim: #a39a95;
+  --mute: #6f6660;
+
+  /* Ember: danger, status, primary action */
+  --ember: #d1263b;
+  --ember-hi: #e8394f;
+  --ember-glow: rgba(209, 38, 59, 0.16);
+  --ember-line: rgba(209, 38, 59, 0.5);
+
+  /* Brass: money, assets, waiting timers */
+  --brass: #c69749;
+  --brass-hi: #dcac59;
+  --brass-soft: rgba(198, 151, 73, 0.14);
+
+  /* Jade: clear, ready, connected */
+  --jade: #4fb488;
+  --jade-soft: rgba(79, 180, 136, 0.12);
+
+  /* Fonts: no web assets. Mono carries the data personality. */
+  --sans: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Roboto Mono", monospace;
+
+  /* Geometry */
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 16px;
+
+  /* Depth */
+  --shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.38);
+
+  /* Layout */
+  --maxw: 560px;
+}

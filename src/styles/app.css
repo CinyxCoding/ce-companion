@@ -1,0 +1,247 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--text);
+  background-color: var(--bg);
+  background:
+    radial-gradient(1100px 560px at 50% -12%, var(--bg-top), transparent 62%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.app {
+  min-height: 100%;
+}
+
+/* A view is a centred column that respects device safe areas */
+.view {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding:
+    calc(env(safe-area-inset-top) + 22px)
+    calc(env(safe-area-inset-right) + 16px)
+    calc(env(safe-area-inset-bottom) + 16px)
+    calc(env(safe-area-inset-left) + 16px);
+}
+.view-login {
+  justify-content: center;
+  gap: 22px;
+}
+
+/* Attribution */
+.credit {
+  text-align: center;
+  color: var(--mute);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding-top: 4px;
+}
+
+/* Brand ------------------------------------------------------------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-mark {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--ember-hi);
+  border: 1px solid var(--ember-line);
+  border-radius: 10px;
+  background: var(--ember-glow);
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(209, 38, 59, 0.25);
+  border-radius: 7px;
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.06;
+}
+.brand-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--text);
+}
+.brand-sub {
+  margin-top: 3px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.36em;
+  color: var(--ember);
+}
+.brand-sm .brand-mark {
+  width: 34px;
+  height: 34px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+.brand-sm .brand-title {
+  font-size: 12px;
+}
+.brand-sm .brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+}
+
+/* Login ------------------------------------------------------------- */
+.login-card {
+  padding: 24px 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ember-line), transparent);
+}
+.tagline {
+  margin: 16px 2px 20px;
+  color: var(--dim);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.label {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--mute);
+  font-weight: 700;
+}
+.hint {
+  font-size: 12px;
+  color: var(--mute);
+  line-height: 1.45;
+}
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Result ------------------------------------------------------------ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.status-row .who {
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.status-row .refresh {
+  margin-left: auto;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tile.wide,
+  .raw-wrap {
+    grid-column: 1 / -1;
+  }
+}
+.view-result .credit {
+  margin-top: 18px;
+}
+
+/* Booting / boot error --------------------------------------------- */
+.boot {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  text-align: center;
+}
+.boot .brand {
+  justify-content: center;
+}
+.boot-text {
+  color: var(--dim);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+.boot-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+.spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--ember);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+  .bar-fill {
+    transition: none;
+  }
+  .btn:active {
+    transform: none;
+  }
+  .pill-live::before {
+    animation: none;
+    opacity: 0.9;
+  }
+}

@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# web build output
+dist/
+
+# capacitor / android build output (keep android/ itself committed for CI)
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/
+android/local.properties
+
+# signing material - never commit these
+*.keystore
+*.jks
+keystore.properties
+
+# misc
+.DS_Store
+.env
+.env.*
+*.log

@@ -1,0 +1,10 @@
+{
+  "appId": "com.cecompanion",
+  "appName": "CE Companion",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
