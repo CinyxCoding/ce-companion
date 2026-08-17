@@ -35,8 +35,7 @@ Job completion and each expedition return.
 A settings sheet (the gear in the header) controls:
 - Auto-refresh interval: Off, 5s, 10s, 30s, 60s. The dashboard silently refetches on that interval while open, which also keeps notification schedules fresh.
 - Notifications: a master on/off. Off cancels everything pending.
-
-# All requests pass through a governor that tracks the 200-per-minute budget in a rolling window and backs off on a 429 using the Retry-After header. The auto-refresh loop asks the governor before each poll.
+- All requests pass through a governor that tracks the 200-per-minute budget in a rolling window and backs off on a 429 using the Retry-After header. The auto-refresh loop asks the governor before each poll.
 
 
 # Legal
