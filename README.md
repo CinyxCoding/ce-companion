@@ -14,21 +14,6 @@
 
 # Developed by Cinyx.
 
-# 
-
-# This is the first vertical slice. It proves the risky parts of the stack end to
-
-# end before any more UI is built:
-
-# 
-
-# \- Secure key storage on the Android Keystore.
-
-# \- A network request that reaches the game API from a packaged app.
-
-# \- Key validation, with a live-updating dashboard on success.
-
-# 
 
 # \## Stack
 
