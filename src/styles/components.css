@@ -137,28 +137,6 @@
   font-weight: 500;
 }
 
-/* Exact-alarm nudge (shown only when the OS blocks exact alarms) --- */
-.exact-hint {
-  display: block;
-  width: 100%;
-  margin: -2px 0 14px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: var(--brass-soft);
-  border: 1px solid rgba(198, 151, 73, 0.3);
-  color: var(--brass-hi);
-  font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-.exact-hint[hidden] {
-  display: none;
-}
-.exact-hint:hover {
-  border-color: rgba(198, 151, 73, 0.5);
-}
-
 /* Footer tools: freshness label + test alert --------------------- */
 .foot-tools {
   display: flex;
@@ -877,4 +855,65 @@
 .arm-clear:hover {
   color: var(--ember-hi);
   border-color: var(--ember-line);
+}
+
+/* Settings sub-heading (groups alert types under Notifications) */
+.set-sublabel {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--mute);
+  font-weight: 700;
+  margin: 14px 0 8px;
+  opacity: 0.85;
+}
+
+/* Game links: quick-nav grid on the ME screen */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.link-btn {
+  padding: 11px 6px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.link-btn:hover {
+  color: var(--text);
+  border-color: var(--ember-line);
+  background: var(--ember-glow);
+}
+.link-btn:active {
+  transform: scale(0.97);
+}
+
+/* Logo easter egg toast */
+.egg-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  padding: 14px 26px;
+  border-radius: 12px;
+  border: 1px solid var(--ember-line);
+  background: var(--ember-glow);
+  color: var(--ember-hi);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.egg-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }

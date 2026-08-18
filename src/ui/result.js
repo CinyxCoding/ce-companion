@@ -47,9 +47,26 @@ function openUrl(url) {
 // Which sections live on each dashboard screen. Me holds what needs attention
 // now; Activity holds what is in progress.
 const SCREEN_SECTIONS = {
-  me: ['status', 'cooldowns', 'finances'],
+  me: ['links', 'status', 'cooldowns', 'finances'],
   activity: ['operations', 'events']
 }
+
+// Quick links into the game. These open the game site in the browser, since the
+// app itself is read-only and does not act for you.
+const GAME_BASE = 'https://cartelempire.online'
+const GAME_LINKS = [
+  ['Town', '/Town'],
+  ['Gym', '/Gym'],
+  ['Missions', '/Missions'],
+  ['Expedition', '/Expedition'],
+  ['Market', '/Market'],
+  ['Inventory', '/Inventory'],
+  ['Hospital', '/Hospital'],
+  ['Bounty', '/Bounty'],
+  ['Casino', '/Casino'],
+  ['Cartel', '/Cartel'],
+  ['Forum', '/Forum']
+]
 
 function cd(atSeconds, zeroLabel) {
   const t = Number(atSeconds) || 0
@@ -208,6 +225,16 @@ function cooldownSection(m, open) {
   return makeSection('cooldowns', 'COOLDOWNS', ready + '/3 ready', open, body)
 }
 
+function linksSection(open) {
+  const grid = el('div', { class: 'link-grid' })
+  GAME_LINKS.forEach(([label, path]) => {
+    const b = el('button', { class: 'link-btn', type: 'button', text: label })
+    b.addEventListener('click', () => openUrl(GAME_BASE + path))
+    grid.append(b)
+  })
+  return makeSection('links', 'GAME LINKS', GAME_LINKS.length + ' places', open, [grid])
+}
+
 function financeSection(m, open) {
   const w = m.wallet
   const body = [
@@ -352,12 +379,24 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
   async function syncBackgroundService() {
     if (settings.notifications) {
       const k = await loadKey()
-      if (k) startBackgroundAlerts(k, !settings.jobAlerts, chatChannels())
+      if (k) startBackgroundAlerts(k, !settings.jobAlerts, chatChannels(), notifCategories(), settings.cooldownReadyOnly)
       else stopBackgroundAlerts()
     } else {
       stopBackgroundAlerts()
       cancelAll() // clear any alarms a previous version may have scheduled
     }
+  }
+
+  function notifCategories() {
+    const cats = []
+    if (settings.notifEvents) cats.push('events')
+    if (settings.notifDrug) cats.push('drug')
+    if (settings.notifMedical) cats.push('medical')
+    if (settings.notifBooster) cats.push('booster')
+    if (settings.notifJail) cats.push('jail')
+    if (settings.notifHospital) cats.push('hospital')
+    if (settings.notifVitals) cats.push('vitals')
+    return cats.join(',')
   }
 
   function chatChannels() {
@@ -403,6 +442,7 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
     const isOpen = (key, def) => (key in openState ? openState[key] : def)
 
     const builders = {
+      links: () => linksSection(isOpen('links', true)),
       status: () => statusSection(m, isOpen('status', true)),
       cooldowns: () => cooldownSection(m, isOpen('cooldowns', true)),
       finances: () => financeSection(m, isOpen('finances', true)),
@@ -513,6 +553,14 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
       // ignore
     }
   })
+  const onlineBtn = el('button', { class: 'ghost-btn', type: 'button', text: 'View policy online' })
+  onlineBtn.addEventListener('click', () => {
+    try {
+      window.open('https://gist.github.com/CinyxCoding/cdffdb45743b48176a307fa062c91b9f', '_blank')
+    } catch (e) {
+      // ignore
+    }
+  })
 
   const ppH = (t) => el('div', { class: 'pp-h', text: t })
   const ppP = (t) => el('p', { class: 'pp-p', text: t })
@@ -542,7 +590,8 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
       ppP('This policy may be updated; material changes will be reflected in the app and at the hosted policy link.'),
       ppH('Contact'),
       ppP('Questions about this policy or your data:'),
-      emailBtn
+      emailBtn,
+      onlineBtn
     )
   )
   privacyOverlay.append(privacyCard)
@@ -553,6 +602,14 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
     privacyOverlay.hidden = false
   })
 
+  // A settings toggle bound to a boolean setting that re-syncs the service.
+  const notifToggle = (label, keyName) =>
+    setRow(label, settings[keyName], (on) => {
+      settings[keyName] = on
+      saveSettings(settings)
+      syncBackgroundService()
+    })
+
   const overlayCard = el(
     'div',
     { class: 'panel overlay-card' },
@@ -561,19 +618,25 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
     el(
       'div',
       { class: 'set-group' },
-      setRow('Notifications', settings.notifications, (on) => {
-        settings.notifications = on
-        saveSettings(settings)
-        syncBackgroundService()
-      }),
-      setRow('Job event alerts', settings.jobAlerts, (on) => {
-        settings.jobAlerts = on
-        saveSettings(settings)
-        syncBackgroundService()
-      }),
+      el('div', { class: 'set-label', text: 'NOTIFICATIONS' }),
+      notifToggle('Notifications', 'notifications'),
       el('div', {
         class: 'set-note',
-        text: 'A background service watches your account and pings you about new events, cooldowns, jail/hospital and full life/energy. It shows a permanent notification and keeps polling while the app is closed, so it uses more battery - turn it off when you do not need alerts. Job alerts stay off by default and still appear in the events list.'
+        text: 'Master switch. A background service watches your account and pings you while the app is closed. It shows a permanent notification and uses more battery, so turn it off when you do not need alerts. The switches below take effect only while this is on.'
+      }),
+      el('div', { class: 'set-sublabel', text: 'ALERT TYPES' }),
+      notifToggle('Events', 'notifEvents'),
+      notifToggle('Job events', 'jobAlerts'),
+      notifToggle('Drug cooldown', 'notifDrug'),
+      notifToggle('Medical cooldown', 'notifMedical'),
+      notifToggle('Booster cooldown', 'notifBooster'),
+      notifToggle('Jail release', 'notifJail'),
+      notifToggle('Hospital release', 'notifHospital'),
+      notifToggle('Life and energy full', 'notifVitals'),
+      notifToggle('Cooldowns: ready alert only', 'cooldownReadyOnly'),
+      el('div', {
+        class: 'set-note',
+        text: 'Ready alert only means cooldowns ping once when they are ready, with no countdown steps. Turn it off to also get step reminders. Job events stay off by default and still appear in the events list.'
       })
     ),
     el(
@@ -611,6 +674,32 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
     overlay.hidden = false
   })
 
+  // A small easter egg: tap the logo five times.
+  const brandMark = el('div', { class: 'brand-mark', text: 'CE' })
+  const eggToast = el('div', { class: 'egg-toast', text: 'Tom sucks' })
+  eggToast.hidden = true
+  let eggTaps = 0
+  let eggTimer = null
+  brandMark.addEventListener('click', () => {
+    eggTaps += 1
+    if (eggTimer) clearTimeout(eggTimer)
+    if (eggTaps >= 5) {
+      eggTaps = 0
+      eggToast.hidden = false
+      requestAnimationFrame(() => eggToast.classList.add('show'))
+      setTimeout(() => {
+        eggToast.classList.remove('show')
+        setTimeout(() => {
+          eggToast.hidden = true
+        }, 300)
+      }, 1600)
+    } else {
+      eggTimer = setTimeout(() => {
+        eggTaps = 0
+      }, 1200)
+    }
+  })
+
   const view = el(
     'section',
     { class: 'view view-result' },
@@ -620,7 +709,7 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
       el(
         'div',
         { class: 'brand brand-sm' },
-        el('div', { class: 'brand-mark', text: 'CE' }),
+        brandMark,
         el(
           'div',
           { class: 'brand-text' },
@@ -643,7 +732,8 @@ export function renderResult(root, { data, screen, onLogout, onNavigate }) {
     msg,
     el('footer', { class: 'credit', text: 'developed by Cinyx  -  unofficial companion' }),
     overlay,
-    privacyOverlay
+    privacyOverlay,
+    eggToast
   )
 
   mount(root, view)

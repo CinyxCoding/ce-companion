@@ -14,8 +14,17 @@ const DEFAULTS = {
   // Job completions are frequent and self-initiated, so they do not raise
   // notifications unless the user opts in. They still show in the events list.
   jobAlerts: false,
-  // Chat channels are not built yet; these persist the user's intent so the
-  // preferences already exist when chat lands.
+  // Per-category notification switches (only apply while notifications is on).
+  notifEvents: true,
+  notifDrug: true,
+  notifMedical: true,
+  notifBooster: true,
+  notifJail: true,
+  notifHospital: true,
+  notifVitals: true,
+  // Cooldowns notify only when they hit ready, with no countdown steps. This is
+  // the quieter default; turn it off to also get the step reminders.
+  cooldownReadyOnly: true,
   chatGlobal: false,
   chatTrade: false,
   chatCartel: false

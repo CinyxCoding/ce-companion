@@ -7,13 +7,17 @@ const BackgroundPoller = registerPlugin('BackgroundPoller')
 
 // chatChannels is a comma list of channels to watch for new-message alerts
 // (e.g. "cartel" or "cartel,global"); empty means no chat alerts.
-export async function startBackgroundAlerts(key, muteJobs, chatChannels) {
+// notifCategories is a comma list of enabled alert categories; cooldownReadyOnly
+// makes cooldowns notify only at the ready point.
+export async function startBackgroundAlerts(key, muteJobs, chatChannels, notifCategories, cooldownReadyOnly) {
   if (!isNative() || !key) return
   try {
     await BackgroundPoller.start({
       key,
       muteJobs: !!muteJobs,
       chatChannels: chatChannels || '',
+      notifCategories: notifCategories == null ? 'events,drug,medical,booster,jail,hospital,vitals' : notifCategories,
+      cooldownReadyOnly: cooldownReadyOnly !== false,
       intervalActive: 10000,
       intervalIdle: 30000
     })

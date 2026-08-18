@@ -61,7 +61,7 @@ export function renderLogin(root, { onConnected }) {
         showMsg('bad', 'That key was not accepted. Check it and try again.')
         break
       case 'forbidden':
-        showMsg('bad', 'This key works but its level is too low. Set it to Limited or higher under Settings > API.')
+        showMsg('bad', 'This key works but its level is too low. Set it to Private-All under Settings > API.')
         break
       case 'rate_limited':
         showMsg('warn', 'The game limited requests. Try again in ' + res.retryAfter + 's.')
@@ -103,7 +103,7 @@ export function renderLogin(root, { onConnected }) {
       { class: 'field' },
       el('label', { class: 'label', text: 'API KEY' }),
       el('div', { class: 'input-wrap' }, input, reveal),
-      el('div', { class: 'hint', text: 'Create one in game under Settings > API. Requires Limited+ level.' })
+      el('div', { class: 'hint', text: 'Create one in game under Settings > API. Requires a Private-All key.' })
     ),
     connect,
     msg

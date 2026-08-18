@@ -25,10 +25,9 @@ function str(value) {
   return value == null ? '' : String(value)
 }
 
-// Events have an unconfirmed shape, so keep the raw object and take a best
-// guess at the common fields. The raw is surfaced in a verify panel so the
-// exact field names can be locked in. When no id field is present, a hash of
-// the text gives a stable id for de-duplicating notifications across polls.
+// Event shape (confirmed): { id (GUID), description (HTML), created (unix s),
+// category, viewed }. Fallbacks are kept in case other event types differ. The
+// GUID id makes notification de-duplication exact.
 function hashStr(s) {
   let h = 5381
   const str = String(s)
@@ -37,12 +36,14 @@ function hashStr(s) {
 }
 
 function normalizeEvent(e, i) {
-  if (e == null) return { id: 'e' + i, text: '', at: 0, raw: e }
-  if (typeof e === 'string') return { id: hashStr(e), text: e, at: 0, raw: e }
-  const text = e.message || e.text || e.description || e.event || e.title || e.body || ''
-  const at = toEpochSeconds(e.timestamp || e.date || e.time || e.createdAt || e.created || e.datetime || 0)
+  if (e == null) return { id: 'e' + i, text: '', at: 0, category: '', viewed: true, raw: e }
+  if (typeof e === 'string') return { id: hashStr(e), text: e, at: 0, category: '', viewed: true, raw: e }
+  const text = e.description || e.message || e.text || e.event || e.title || e.body || ''
+  const at = toEpochSeconds(e.created || e.timestamp || e.date || e.time || e.createdAt || e.datetime || 0)
   const id = e.id != null ? String(e.id) : e.eventId != null ? String(e.eventId) : hashStr(String(text) + '|' + at)
-  return { id, text: String(text), at, raw: e }
+  const category = e.category != null ? String(e.category) : ''
+  const viewed = e.viewed === false ? false : true
+  return { id, text: String(text), at, category, viewed, raw: e }
 }
 
 export function normalize(raw) {

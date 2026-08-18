@@ -85,6 +85,19 @@ public class PollService extends Service {
     private String[] chatChannels = new String[0];
     private int chatIndex = 0;
     private boolean cartelChatForbidden = false;
+
+    // Which alert categories are enabled, and whether cooldowns fire only at the
+    // ready point (no countdown steps). Set from settings on start.
+    private Set<String> enabledCategories = defaultCategories();
+    private boolean cooldownReadyOnly = true;
+
+    private static Set<String> defaultCategories() {
+        return new HashSet<>(Arrays.asList("events", "drug", "medical", "booster", "jail", "hospital", "vitals"));
+    }
+
+    private boolean catOn(String name) {
+        return enabledCategories.contains(name);
+    }
     private final ArrayDeque<Long> chatHits = new ArrayDeque<>();
 
     @Override
@@ -115,6 +128,11 @@ public class PollService extends Service {
             chatIndex = 0;
             cartelChatForbidden = false;
 
+            String catCfg = intent.getStringExtra("notifCategories");
+            if (catCfg == null) catCfg = "events,drug,medical,booster,jail,hospital,vitals";
+            enabledCategories = catCfg.isEmpty() ? new HashSet<String>() : new HashSet<>(Arrays.asList(catCfg.split(",")));
+            cooldownReadyOnly = intent.getBooleanExtra("cooldownReadyOnly", true);
+
             // Reset baseline only for channels newly added, so an already-watched
             // channel keeps its seen-set (no re-blast) while a newly enabled one
             // does not dump its history.
@@ -128,6 +146,8 @@ public class PollService extends Service {
 
             ce.putString("key", apiKey)
                 .putBoolean("muteJobs", muteJobs)
+                .putString("notif_cats", catCfg)
+                .putBoolean("cd_ready_only", cooldownReadyOnly)
                 .putLong("intervalActive", intervalActiveMs)
                 .putLong("intervalIdle", intervalIdleMs)
                 .putBoolean("baselined", false)
@@ -140,6 +160,9 @@ public class PollService extends Service {
             intervalIdleMs = p.getLong("intervalIdle", 120000);
             String chatCfg = p.getString("chat_cfg", "");
             chatChannels = chatCfg.isEmpty() ? new String[0] : chatCfg.split(",");
+            String catCfg = p.getString("notif_cats", "events,drug,medical,booster,jail,hospital,vitals");
+            enabledCategories = catCfg.isEmpty() ? new HashSet<String>() : new HashSet<>(Arrays.asList(catCfg.split(",")));
+            cooldownReadyOnly = p.getBoolean("cd_ready_only", true);
         }
 
         createChannels();
@@ -312,6 +335,7 @@ public class PollService extends Service {
             if (!baselined) continue;
             String category = e.optString("category", "");
             if (muteJobs && "Jobs".equalsIgnoreCase(category)) continue;
+            if (!catOn("events")) continue;
             String text = stripHtml(e.optString("description", ""));
             if (text.isEmpty()) text = "New event";
             notify("Cartel Empire", text);
@@ -356,11 +380,12 @@ public class PollService extends Service {
         long hosp = epochSec(o.optString("hospitalRelease", "0"));
         long jail = epochSec(o.optString("jailRelease", "0"));
 
-        detectTimer(p, "drug", "Drug cooldown", "Drug cooldown is ready", drug, NO_STEPS, false, now, baseline);
-        detectTimer(p, "medical", "Medical cooldown", "Medical cooldown is ready", medical, COOLDOWN_STEPS, false, now, baseline);
-        detectTimer(p, "booster", "Booster cooldown", "Booster cooldown is ready", booster, COOLDOWN_STEPS, false, now, baseline);
-        detectTimer(p, "hospital", "hospital", "You are out of hospital", hosp, CONFINE_STEPS, true, now, baseline);
-        detectTimer(p, "jail", "jail", "You are out of jail", jail, CONFINE_STEPS, true, now, baseline);
+        long[] cdSteps = cooldownReadyOnly ? NO_STEPS : COOLDOWN_STEPS;
+        detectTimer(p, "drug", "Drug cooldown", "Drug cooldown is ready", drug, cdSteps, false, now, baseline, catOn("drug"));
+        detectTimer(p, "medical", "Medical cooldown", "Medical cooldown is ready", medical, cdSteps, false, now, baseline, catOn("medical"));
+        detectTimer(p, "booster", "Booster cooldown", "Booster cooldown is ready", booster, cdSteps, false, now, baseline, catOn("booster"));
+        detectTimer(p, "hospital", "hospital", "You are out of hospital", hosp, CONFINE_STEPS, true, now, baseline, catOn("hospital"));
+        detectTimer(p, "jail", "jail", "You are out of jail", jail, CONFINE_STEPS, true, now, baseline, catOn("jail"));
 
         int curLife = o.optInt("currentLife", 0);
         int maxLife = o.optInt("maxLife", 0);
@@ -368,17 +393,28 @@ public class PollService extends Service {
         int maxEn = o.optInt("maxEnergy", 0);
         boolean full = maxLife > 0 && curLife >= maxLife && maxEn > 0 && curEn >= maxEn;
         boolean wasFull = p.getBoolean("timer_vitalsFull", false);
-        if (!baseline && full && !wasFull) notify("CE Companion", "Life and energy are full");
+        if (!baseline && full && !wasFull && catOn("vitals")) notify("CE Companion", "Life and energy are full");
 
         p.edit().putBoolean("timer_vitalsFull", full).putBoolean("timers_baselined", true).apply();
     }
 
     private void detectTimer(SharedPreferences p, String prefix, String reminderName, String doneMsg,
-                             long readyAt, long[] thresholds, boolean isConf, long now, boolean baseline) {
+                             long readyAt, long[] thresholds, boolean isConf, long now, boolean baseline, boolean enabled) {
         boolean prevActive = p.getBoolean("t_" + prefix + "_act", false);
         long prevReady = p.getLong("t_" + prefix + "_rdy", -1);
         Set<String> fired = loadStrSet(p, "t_" + prefix + "_fired");
-        if (readyAt != prevReady && readyAt > now) fired = new LinkedHashSet<>();
+
+        // A new or changed timer: seed every threshold that is ALREADY passed at
+        // this first sight, so they do not fire retroactively. Only thresholds
+        // the timer later counts down across will alert. This stops a short
+        // cooldown (say a 15-minute medical) from firing every step at once.
+        if (readyAt != prevReady && readyAt > now) {
+            fired = new LinkedHashSet<>();
+            long startRemaining = readyAt - now;
+            for (long t : thresholds) {
+                if (startRemaining <= t) fired.add(String.valueOf(t));
+            }
+        }
 
         boolean active = readyAt > now;
         if (active) {
@@ -386,12 +422,12 @@ public class PollService extends Service {
             for (long t : thresholds) {
                 String tk = String.valueOf(t);
                 if (remaining <= t && !fired.contains(tk)) {
-                    if (!baseline) notify("Cartel Empire", reminderText(reminderName, t, isConf));
+                    if (!baseline && enabled) notify("Cartel Empire", reminderText(reminderName, t, isConf));
                     fired.add(tk);
                 }
             }
         } else {
-            if (prevActive && !baseline) notify("Cartel Empire", doneMsg);
+            if (prevActive && !baseline && enabled) notify("Cartel Empire", doneMsg);
         }
 
         p.edit()

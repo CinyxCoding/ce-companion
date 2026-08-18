@@ -26,6 +26,8 @@ public class BackgroundPoller extends Plugin {
         }
         boolean muteJobs = Boolean.TRUE.equals(call.getBoolean("muteJobs", true));
         String chatChannels = call.getString("chatChannels", "");
+        String notifCategories = call.getString("notifCategories", "events,drug,medical,booster,jail,hospital,vitals");
+        boolean cooldownReadyOnly = Boolean.TRUE.equals(call.getBoolean("cooldownReadyOnly", true));
         int intervalActive = call.getInt("intervalActive", 30000);
         int intervalIdle = call.getInt("intervalIdle", 120000);
 
@@ -34,6 +36,8 @@ public class BackgroundPoller extends Plugin {
         i.putExtra("key", key);
         i.putExtra("muteJobs", muteJobs);
         i.putExtra("chatChannels", chatChannels);
+        i.putExtra("notifCategories", notifCategories);
+        i.putExtra("cooldownReadyOnly", cooldownReadyOnly);
         i.putExtra("intervalActive", intervalActive);
         i.putExtra("intervalIdle", intervalIdle);
 
