@@ -21,3 +21,5 @@ keystore.properties
 .env
 .env.*
 *.log
+
+android/app/release/
